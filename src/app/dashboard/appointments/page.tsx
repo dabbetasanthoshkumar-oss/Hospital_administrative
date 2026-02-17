@@ -21,6 +21,9 @@ export default async function AppointmentsPage() {
     `)
         .order('appointment_date', { ascending: true })
 
+    const patientsData = (patients || []) as { id: string; full_name: string }[]
+    const doctorsData = (doctors || []) as any[]
+
     return (
         <div className="p-8">
             <div className="grid gap-8 lg:grid-cols-3">
@@ -30,12 +33,18 @@ export default async function AppointmentsPage() {
                         <CardTitle>Schedule Appointment</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <form action={createAppointment} className="space-y-4">
+                        <form
+                            action={async (formData: FormData) => {
+                                'use server'
+                                await createAppointment(formData)
+                            }}
+                            className="space-y-4"
+                        >
                             <div className="grid gap-2">
                                 <Label htmlFor="patient_id">Patient</Label>
                                 <select id="patient_id" name="patient_id" required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                     <option value="">Select Patient</option>
-                                    {patients?.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                                    {patientsData.map(p => <option key={p.id} value={p.id}>{p.full_name}</option>)}
                                 </select>
                             </div>
 
@@ -43,9 +52,9 @@ export default async function AppointmentsPage() {
                                 <Label htmlFor="doctor_id">Doctor</Label>
                                 <select id="doctor_id" name="doctor_id" required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                     <option value="">Select Doctor</option>
-                                    {doctors?.map(d => (
+                                    {doctorsData.map(d => (
                                         <option key={d.id} value={d.id}>
-                                            {(d.profiles as any)?.full_name} ({d.specialization})
+                                            {d.profiles?.full_name} ({d.specialization})
                                         </option>
                                     ))}
                                 </select>
@@ -68,7 +77,7 @@ export default async function AppointmentsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {appointments?.map((app) => (
+                            {appointments?.map((app: any) => (
                                 <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
                                     <div>
                                         <p className="font-semibold text-primary">{(app.patients as any)?.full_name}</p>
@@ -77,8 +86,8 @@ export default async function AppointmentsPage() {
                                         </p>
                                     </div>
                                     <div className={`px-2 py-1 rounded-full text-xs font-medium ${app.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                                            app.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                'bg-red-100 text-red-700'
+                                        app.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                            'bg-red-100 text-red-700'
                                         }`}>
                                         {app.status}
                                     </div>
