@@ -15,60 +15,70 @@ export default async function RecordsPage() {
         .order('created_at', { ascending: false })
 
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold">Medical History</h1>
-                    <p className="text-muted-foreground text-sm">Chronicling patient clinical journeys</p>
-                </div>
-            </div>
+        <div className="space-y-10">
+            <header>
+                <h1 className="text-4xl font-black tracking-tight text-white mb-2">Medical History</h1>
+                <p className="text-blue-100/60 font-medium">Chronicling patient clinical journeys</p>
+            </header>
 
-            <div className="grid gap-6">
+            <div className="grid gap-8">
                 {records?.map((record) => (
-                    <Card key={record.id} className="shadow-sm hover:shadow-md transition-shadow overflow-hidden border-l-4 border-l-primary">
-                        <CardHeader className="bg-slate-50/50 pb-4">
+                    <Card key={record.id} className="glass-card border-none relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+                        <CardHeader className="bg-white/5 pb-6 border-b border-white/5">
                             <div className="flex justify-between items-start">
-                                <div>
-                                    <CardTitle className="text-lg">{(record.patients as any)?.full_name}</CardTitle>
-                                    <p className="text-xs text-muted-foreground font-mono">{(record.patients as any)?.patient_id}</p>
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-white/10 to-primary/20 flex items-center justify-center text-white font-black shadow-lg">
+                                        {(record.patients as any)?.full_name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-xl font-bold text-white">{(record.patients as any)?.full_name}</CardTitle>
+                                        <p className="text-[10px] text-primary font-black uppercase tracking-widest">{(record.patients as any)?.patient_id}</p>
+                                    </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-medium">{new Date(record.created_at).toLocaleDateString()}</p>
-                                    <p className="text-xs text-muted-foreground">Dr. {(record.doctors as any)?.profiles?.full_name}</p>
+                                    <p className="text-sm font-bold text-white mb-1">{new Date(record.created_at).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                    <p className="text-[10px] text-blue-100/40 font-black uppercase tracking-tighter">Consultant: Dr. {(record.doctors as any)?.profiles?.full_name}</p>
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-6 grid gap-6 md:grid-cols-2">
-                            <div className="space-y-4">
+                        <CardContent className="pt-8 grid gap-8 md:grid-cols-2">
+                            <div className="space-y-6">
                                 <div>
-                                    <h4 className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-1">
-                                        <Thermometer className="h-4 w-4 text-red-500" />
+                                    <h4 className="flex items-center gap-3 text-xs font-black text-blue-100/60 uppercase tracking-widest mb-3">
+                                        <div className="p-1.5 bg-red-500/20 rounded-lg">
+                                            <Thermometer className="h-4 w-4 text-red-400" />
+                                        </div>
                                         Diagnosis
                                     </h4>
-                                    <p className="text-sm text-slate-600 leading-relaxed bg-red-50/30 p-3 rounded">{record.diagnosis}</p>
+                                    <div className="text-sm text-white font-medium leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5">{record.diagnosis}</div>
                                 </div>
                                 <div>
-                                    <h4 className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-1">
-                                        <ClipboardList className="h-4 w-4 text-blue-500" />
+                                    <h4 className="flex items-center gap-3 text-xs font-black text-blue-100/60 uppercase tracking-widest mb-3">
+                                        <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                                            <ClipboardList className="h-4 w-4 text-blue-400" />
+                                        </div>
                                         Prescription
                                     </h4>
-                                    <pre className="text-sm text-slate-600 font-sans whitespace-pre-wrap bg-blue-50/30 p-3 rounded">{record.prescription_text || 'No prescription issued.'}</pre>
+                                    <pre className="text-sm text-blue-400 font-bold font-mono whitespace-pre-wrap bg-primary/10 p-4 rounded-2xl border border-primary/10">{record.prescription_text || 'No prescription issued.'}</pre>
                                 </div>
                             </div>
                             <div>
-                                <h4 className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-1">
-                                    <FileText className="h-4 w-4 text-amber-500" />
+                                <h4 className="flex items-center gap-3 text-xs font-black text-blue-100/60 uppercase tracking-widest mb-3">
+                                    <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                                        <FileText className="h-4 w-4 text-amber-400" />
+                                    </div>
                                     Clinical Notes
                                 </h4>
-                                <p className="text-sm text-slate-600 leading-relaxed bg-amber-50/30 p-3 rounded min-h-[100px]">{record.notes || 'No additional notes provided.'}</p>
+                                <p className="text-sm text-blue-100/70 font-medium leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5 min-h-[160px]">{record.notes || 'No additional notes provided.'}</p>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
                 {(!records || records.length === 0) && (
-                    <div className="text-center py-20 bg-white border-2 border-dashed rounded-xl">
-                        <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-500">No medical records exist in the system yet.</p>
+                    <div className="text-center py-32 glass-card border-none">
+                        <FileText className="h-16 w-16 text-white/5 mx-auto mb-6" />
+                        <p className="font-black text-blue-100/20 uppercase tracking-[0.2em]">Clinical archives are empty</p>
                     </div>
                 )}
             </div>

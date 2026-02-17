@@ -27,85 +27,99 @@ export default async function BillingPage() {
         .order('created_at', { ascending: false })
 
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold">Billing & Invoices</h1>
-                    <p className="text-muted-foreground text-sm">Manage hospital revenue and patient payments</p>
-                </div>
-            </div>
+        <div className="space-y-10">
+            <header>
+                <h1 className="text-4xl font-black tracking-tight text-white mb-2">Billing & Invoices</h1>
+                <p className="text-blue-100/60 font-medium">Manage hospital revenue and patient payments</p>
+            </header>
 
-            <div className="grid gap-6 md:grid-cols-3 mb-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+            <div className="grid gap-8 md:grid-cols-3">
+                <Card className="glass-card border-none relative overflow-hidden group jelly">
+                    <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+                        <CardTitle className="text-xs font-black text-blue-100/40 uppercase tracking-widest">Total Revenue</CardTitle>
+                        <div className="p-2 bg-emerald-500/20 rounded-xl">
+                            <DollarSign className="w-5 h-5 text-emerald-400" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
+                        <div className="text-4xl font-black text-white tracking-tight mb-2">
                             ${bills?.reduce((acc, b) => acc + (b.payment_status === 'paid' ? Number(b.total_amount) : 0), 0).toFixed(2)}
                         </div>
-                        <p className="text-xs text-muted-foreground">From paid invoices</p>
+                        <p className="text-xs text-blue-100/30 font-bold uppercase tracking-tight">From paid invoices</p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
-                        <CreditCard className="w-4 h-4 text-muted-foreground" />
+
+                <Card className="glass-card border-none relative overflow-hidden group jelly">
+                    <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+                        <CardTitle className="text-xs font-black text-blue-100/40 uppercase tracking-widest">Pending Payments</CardTitle>
+                        <div className="p-2 bg-amber-500/20 rounded-xl">
+                            <CreditCard className="w-5 h-5 text-amber-400" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
+                        <div className="text-4xl font-black text-white tracking-tight mb-2">
                             ${bills?.reduce((acc, b) => acc + (b.payment_status === 'pending' ? Number(b.total_amount) : 0), 0).toFixed(2)}
                         </div>
-                        <p className="text-xs text-muted-foreground">Outstanding balances</p>
+                        <p className="text-xs text-blue-100/30 font-bold uppercase tracking-tight">Outstanding balances</p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Overdue Invoices</CardTitle>
-                        <Receipt className="w-4 h-4 text-muted-foreground" />
+
+                <Card className="glass-card border-none relative overflow-hidden group jelly">
+                    <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+                        <CardTitle className="text-xs font-black text-blue-100/40 uppercase tracking-widest">System Health</CardTitle>
+                        <div className="p-2 bg-primary/20 rounded-xl">
+                            <Receipt className="w-5 h-5 text-primary" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0</div>
-                        <p className="text-xs text-muted-foreground">System check in progress</p>
+                        <div className="text-4xl font-black text-white tracking-tight mb-2">100%</div>
+                        <p className="text-xs text-blue-100/30 font-bold uppercase tracking-tight">Automated billing active</p>
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="border rounded-lg bg-card shadow-sm overflow-hidden">
+            <div className="glass-card border-none overflow-hidden pb-4">
                 <Table>
-                    <TableHeader className="bg-muted/50">
-                        <TableRow>
-                            <TableHead>Patient</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                    <TableHeader className="bg-white/5">
+                        <TableRow className="border-white/10 hover:bg-transparent">
+                            <TableHead className="font-bold text-blue-100/60 uppercase text-[10px] tracking-widest pl-8 py-6">Patient</TableHead>
+                            <TableHead className="font-bold text-blue-100/60 uppercase text-[10px] tracking-widest py-6">Date</TableHead>
+                            <TableHead className="font-bold text-blue-100/60 uppercase text-[10px] tracking-widest py-6">Amount</TableHead>
+                            <TableHead className="font-bold text-blue-100/60 uppercase text-[10px] tracking-widest py-6">Status</TableHead>
+                            <TableHead className="text-right font-bold text-blue-100/60 uppercase text-[10px] tracking-widest pr-8 py-6">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {bills?.map((bill) => (
-                            <TableRow key={bill.id}>
-                                <TableCell>
-                                    <div className="font-medium">{(bill.appointment as any)?.patient?.full_name}</div>
-                                    <div className="text-xs text-muted-foreground">{(bill.appointment as any)?.patient?.patient_id}</div>
+                            <TableRow key={bill.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                                <TableCell className="pl-8 py-5">
+                                    <div className="font-bold text-white text-sm">{(bill.appointment as any)?.patient?.full_name}</div>
+                                    <div className="text-[10px] font-black text-blue-100/30 uppercase tracking-tighter">{(bill.appointment as any)?.patient?.patient_id}</div>
                                 </TableCell>
-                                <TableCell>{new Date((bill.appointment as any)?.appointment_date).toLocaleDateString()}</TableCell>
-                                <TableCell className="font-bold">${Number(bill.total_amount).toFixed(2)}</TableCell>
-                                <TableCell>
-                                    <Badge variant={bill.payment_status === 'paid' ? 'secondary' : 'outline'}>
+                                <TableCell className="text-blue-100/60 font-medium text-sm py-5">
+                                    {new Date((bill.appointment as any)?.appointment_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </TableCell>
+                                <TableCell className="font-black text-primary text-base py-5">${Number(bill.total_amount).toFixed(2)}</TableCell>
+                                <TableCell className="py-5">
+                                    <Badge variant="outline" className={`
+                                        rounded-lg font-black text-[9px] tracking-widest px-2.5 py-1 border-none uppercase
+                                        ${bill.payment_status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}
+                                    `}>
                                         {bill.payment_status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-right whitespace-nowrap">
-                                    <button className="text-primary hover:underline font-medium text-sm">View Details</button>
+                                <TableCell className="text-right pr-8 py-5">
+                                    <button className="px-5 py-2.5 glass-button jelly text-white text-[10px] font-black tracking-widest uppercase rounded-xl">
+                                        View Details
+                                    </button>
                                 </TableCell>
                             </TableRow>
                         ))}
                         {(!bills || bills.length === 0) && (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                                    No billing records found.
+                            <TableRow className="hover:bg-transparent">
+                                <TableCell colSpan={5} className="text-center py-32">
+                                    <Receipt className="h-16 w-16 mx-auto mb-6 text-white/5" />
+                                    <p className="font-black text-blue-100/20 uppercase tracking-[0.2em]">No financial records detected</p>
                                 </TableCell>
                             </TableRow>
                         )}

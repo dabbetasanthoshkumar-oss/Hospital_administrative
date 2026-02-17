@@ -49,6 +49,23 @@ const config: Config = {
                 md: "calc(var(--radius) - 2px)",
                 sm: "calc(var(--radius) - 4px)",
             },
+            keyframes: {
+                jelly: {
+                    "0%, 100%": { transform: "scale(1, 1)" },
+                    "25%": { transform: "scale(0.9, 1.1)" },
+                    "50%": { transform: "scale(1.1, 0.9)" },
+                    "75%": { transform: "scale(0.95, 1.05)" },
+                },
+                bubble: {
+                    "0%": { transform: "translateY(0) scale(1)", opacity: "0" },
+                    "50%": { opacity: "1" },
+                    "100%": { transform: "translateY(-100px) scale(1.5)", opacity: "0" },
+                }
+            },
+            animation: {
+                jelly: "jelly 0.6s ease-in-out both",
+                bubble: "bubble 3s ease-in-out infinite",
+            }
         },
     },
     plugins: [require("tailwindcss-animate")],

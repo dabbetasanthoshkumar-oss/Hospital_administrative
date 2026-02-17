@@ -6,9 +6,12 @@ import { LogOut } from 'lucide-react'
 
 export function LogoutButton() {
     return (
-        <Button variant="outline" size="sm" onClick={() => logout()}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-        </Button>
+        <button
+            onClick={() => logout()}
+            className="p-3 glass-button jelly rounded-xl hover:text-red-400 transition-colors"
+            title="Logout"
+        >
+            <LogOut className="h-5 w-5" />
+        </button>
     )
 }

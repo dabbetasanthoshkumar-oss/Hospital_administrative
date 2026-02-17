@@ -40,41 +40,49 @@ export default async function DashboardLayout({
     ]
 
     return (
-        <div className="flex min-h-screen bg-slate-50">
+        <div className="flex min-h-screen">
             {/* Sidebar */}
-            <aside className="w-64 bg-white border-r shadow-sm hidden md:flex flex-col">
-                <div className="p-6 border-b">
-                    <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-                        <Stethoscope className="h-6 w-6" />
-                        HospiSys
+            <aside className="w-72 glass-card m-4 mr-0 border-none hidden md:flex flex-col z-20 overflow-hidden">
+                <div className="p-8 border-b border-white/10">
+                    <h2 className="text-2xl font-black tracking-tighter text-white flex items-center gap-3">
+                        <div className="p-2 bg-primary rounded-xl jelly shadow-lg shadow-primary/20">
+                            <Stethoscope className="h-6 w-6 text-white" />
+                        </div>
+                        HOPI SYNC
                     </h2>
                 </div>
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-6 space-y-2 overflow-y-auto">
                     {navItems.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-primary rounded-lg transition-colors group"
+                            className="flex items-center gap-4 px-5 py-3.5 text-blue-100/70 hover:text-white hover:bg-white/5 rounded-2xl transition-all duration-300 group jelly"
                         >
-                            <item.icon className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                            <span className="font-medium">{item.label}</span>
+                            <item.icon className="h-5 w-5 group-hover:text-primary transition-colors" />
+                            <span className="font-semibold tracking-tight">{item.label}</span>
                         </Link>
                     ))}
                 </nav>
-                <div className="p-4 border-t mt-auto">
+                <div className="p-6 border-t border-white/10 mt-auto">
                     <Link
                         href="/dashboard/settings"
-                        className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 rounded-lg"
+                        className="flex items-center gap-4 px-5 py-4 text-blue-100/70 hover:text-white hover:bg-white/5 rounded-2xl transition-all group bubble-bg"
                     >
-                        <Settings className="h-5 w-5" />
-                        <span className="font-medium">Settings</span>
+                        <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-500" />
+                        <span className="font-semibold">Control Center</span>
                     </Link>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col h-screen overflow-y-auto">
-                {children}
+            <main className="flex-1 flex flex-col h-screen overflow-hidden p-4">
+                <div className="flex-1 glass-card border-none overflow-y-auto p-8 relative">
+                    {/* Decorative Background Blob */}
+                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="relative z-10">
+                        {children}
+                    </div>
+                </div>
             </main>
         </div>
     )
