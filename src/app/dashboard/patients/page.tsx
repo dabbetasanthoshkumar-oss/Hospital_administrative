@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { Button } from "@/components/ui/button"
 import {
     Table,
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 
 export default async function PatientsPage() {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { data: patients } = await supabase
         .from('patients')
         .select('*')

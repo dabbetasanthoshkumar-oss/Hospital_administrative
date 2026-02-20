@@ -1,9 +1,17 @@
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, ClipboardList, Thermometer } from 'lucide-react'
+import { RecordForm } from './record-form'
 
 export default async function RecordsPage() {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
+
+    // Fetch related data for the form
+    const { data: patients } = await supabase.from('patients').select('id, full_name')
+    const { data: appointments } = await supabase
+        .from('appointments')
+        .select('id, appointment_date, status, patients(full_name)')
+        .order('appointment_date', { ascending: false })
 
     const { data: records } = await supabase
         .from('medical_records')
@@ -16,9 +24,12 @@ export default async function RecordsPage() {
 
     return (
         <div className="space-y-10">
-            <header>
-                <h1 className="text-4xl font-black tracking-tight text-white mb-2">Medical History</h1>
-                <p className="text-blue-100/60 font-medium">Chronicling patient clinical journeys</p>
+            <header className="flex justify-between items-end">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-white mb-2">Medical History</h1>
+                    <p className="text-blue-100/60 font-medium text-sm">Chronicling patient clinical journeys</p>
+                </div>
+                <RecordForm patients={patients || []} appointments={appointments || []} />
             </header>
 
             <div className="grid gap-8">
@@ -51,7 +62,7 @@ export default async function RecordsPage() {
                                         </div>
                                         Diagnosis
                                     </h4>
-                                    <div className="text-sm text-white font-medium leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5">{record.diagnosis}</div>
+                                    <div className="text-sm text-white font-medium leading-relaxed bg-white/10 p-4 rounded-2xl border border-white/5">{record.diagnosis}</div>
                                 </div>
                                 <div>
                                     <h4 className="flex items-center gap-3 text-xs font-black text-blue-100/60 uppercase tracking-widest mb-3">
@@ -60,7 +71,7 @@ export default async function RecordsPage() {
                                         </div>
                                         Prescription
                                     </h4>
-                                    <pre className="text-sm text-blue-400 font-bold font-mono whitespace-pre-wrap bg-primary/10 p-4 rounded-2xl border border-primary/10">{record.prescription_text || 'No prescription issued.'}</pre>
+                                    <pre className="text-sm text-white font-bold font-mono whitespace-pre-wrap bg-primary/20 p-4 rounded-2xl border border-primary/10">{record.prescription_text || 'No prescription issued.'}</pre>
                                 </div>
                             </div>
                             <div>
@@ -70,7 +81,7 @@ export default async function RecordsPage() {
                                     </div>
                                     Clinical Notes
                                 </h4>
-                                <p className="text-sm text-blue-100/70 font-medium leading-relaxed bg-white/5 p-4 rounded-2xl border border-white/5 min-h-[160px]">{record.notes || 'No additional notes provided.'}</p>
+                                <p className="text-sm text-white font-medium leading-relaxed bg-white/10 p-4 rounded-2xl border border-white/5 min-h-[160px]">{record.notes || 'No additional notes provided.'}</p>
                             </div>
                         </CardContent>
                     </Card>

@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Stethoscope, Award, Mail, Calendar, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 
 export default async function DoctorsPage() {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: doctors } = await supabase
         .from('doctors')
@@ -31,7 +31,7 @@ export default async function DoctorsPage() {
 
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {doctors?.map((doctor) => (
-                    <Card key={doctor.id} className="glass-card border-none overflow-hidden relative group jelly">
+                    <Card key={doctor.id} className="glass-card border-none overflow-hidden relative group hover:scale-[1.02] transition-transform duration-300">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-150 transition-transform duration-700">
                             <Stethoscope className="w-20 h-20" />
                         </div>

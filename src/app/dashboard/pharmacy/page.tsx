@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Table,
@@ -10,9 +10,10 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Pill, AlertTriangle, PackageSearch } from 'lucide-react'
+import { InventoryForm } from './inventory-form'
 
 export default async function PharmacyPage() {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: inventory } = await supabase
         .from('inventory')
@@ -30,9 +31,12 @@ export default async function PharmacyPage() {
 
     return (
         <div className="space-y-10">
-            <header>
-                <h1 className="text-4xl font-black tracking-tight text-white mb-2">Pharmacy & Inventory</h1>
-                <p className="text-blue-100/60 font-medium">Control medicine stock and pharmaceutical supply chain</p>
+            <header className="flex justify-between items-end">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-white mb-2">Pharmacy & Inventory</h1>
+                    <p className="text-blue-100/60 font-medium text-sm">Control medicine stock and pharmaceutical supply chain</p>
+                </div>
+                <InventoryForm />
             </header>
 
             <div className="grid gap-8 md:grid-cols-2">

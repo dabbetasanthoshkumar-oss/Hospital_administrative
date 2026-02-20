@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,7 +13,7 @@ const billingSchema = z.object({
 })
 
 export async function createOrUpdateBilling(data: z.infer<typeof billingSchema>) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { error } = await supabase
         .from('billing')
@@ -28,7 +28,7 @@ export async function createOrUpdateBilling(data: z.infer<typeof billingSchema>)
 }
 
 export async function updatePaymentStatus(id: string, status: string) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from('billing')
         .update({ payment_status: status })

@@ -1,115 +1,120 @@
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-    Users,
-    CalendarCheck,
-    TrendingUp,
-    IndianRupee,
-    Activity
+    Users, CalendarCheck, TrendingUp, IndianRupee,
+    Activity, CheckCircle2, Clock, XCircle, Stethoscope
 } from 'lucide-react'
 
 export default async function AnalyticsPage() {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
-    // High-level stats
-    const { count: patientCount } = await supabase.from('patients').select('*', { count: 'exact', head: true })
-    const { count: appCount } = await supabase.from('appointments').select('*', { count: 'exact', head: true })
+    // Counts
+    const [
+        { count: patientCount },
+        { count: appCount },
+        { count: doctorCount },
+        { data: billingData },
+        { data: recentAppointments },
+        { data: apptByStatus },
+        { data: topDoctors }
+    ] = await Promise.all([
+        supabase.from('patients').select('*', { count: 'exact', head: true }),
+        supabase.from('appointments').select('*', { count: 'exact', head: true }),
+        supabase.from('doctors').select('*', { count: 'exact', head: true }),
+        supabase.from('billing').select('total_amount').eq('payment_status', 'paid'),
+        supabase.from('appointments').select('*, patients(full_name)').order('created_at', { ascending: false }).limit(6),
+        supabase.from('appointments').select('status'),
+        supabase.from('doctors').select('id, specialization, profiles(full_name)').limit(5),
+    ])
 
-    const { data: billingData } = await supabase
-        .from('billing')
-        .select('total_amount')
-        .eq('payment_status', 'paid')
-
-    const totalRevenue = billingData?.reduce((acc, curr) => acc + Number(curr.total_amount), 0) || 0
-
-    const { data: recentAppointments } = await supabase
-        .from('appointments')
-        .select('*, patients(full_name)')
-        .order('created_at', { ascending: false })
-        .limit(5)
+    const totalRevenue = billingData?.reduce((acc, curr) => acc + Number(curr.total_amount), 0) ?? 0
+    const scheduled = apptByStatus?.filter(a => a.status === 'scheduled').length ?? 0
+    const completed = apptByStatus?.filter(a => a.status === 'completed').length ?? 0
+    const cancelled = apptByStatus?.filter(a => a.status === 'cancelled').length ?? 0
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-8">
             <header>
-                <h1 className="text-4xl font-black tracking-tight text-white mb-2">Performance Analytics</h1>
-                <p className="text-blue-100/60 font-medium">Real-time overview of hospital metrics and growth</p>
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mb-2">Performance Analytics</h1>
+                <p className="text-blue-100/60 font-medium">Real-time hospital metrics and operational insights</p>
             </header>
 
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                <StatsCard
-                    title="Total Patients"
-                    value={patientCount?.toString() || '0'}
-                    description="+12% from last month"
-                    icon={Users}
-                    color="text-primary"
-                />
-                <StatsCard
-                    title="Appointments"
-                    value={appCount?.toString() || '0'}
-                    description="32 scheduled today"
-                    icon={CalendarCheck}
-                    color="text-cyan-400"
-                />
-                <StatsCard
-                    title="Total Revenue"
-                    value={`$${totalRevenue.toLocaleString()}`}
-                    description="Paid invoices only"
-                    icon={IndianRupee}
-                    color="text-emerald-400"
-                />
-                <StatsCard
-                    title="Growth Rate"
-                    value="8.4%"
-                    description="Weekly patient increase"
-                    icon={TrendingUp}
-                    color="text-amber-400"
-                />
+            {/* KPI Cards */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <StatsCard title="Total Patients" value={patientCount?.toString() ?? '0'} sub="Registered" icon={Users} color="text-primary" bg="bg-primary/20" />
+                <StatsCard title="Appointments" value={appCount?.toString() ?? '0'} sub={`${scheduled} active`} icon={CalendarCheck} color="text-cyan-400" bg="bg-cyan-500/20" />
+                <StatsCard title="Revenue" value={`₹${totalRevenue.toLocaleString('en-IN')}`} sub="Paid invoices" icon={IndianRupee} color="text-emerald-400" bg="bg-emerald-500/20" />
+                <StatsCard title="Doctors" value={doctorCount?.toString() ?? '0'} sub="On staff" icon={Stethoscope} color="text-amber-400" bg="bg-amber-500/20" />
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-7">
-                <Card className="lg:col-span-4 glass-card border-none overflow-hidden">
-                    <CardHeader>
-                        <CardTitle className="text-xl font-bold flex items-center gap-3 text-white">
-                            <div className="p-2 bg-primary/20 rounded-lg">
-                                <Activity className="h-5 w-5 text-primary" />
-                            </div>
-                            Patient Growth Trend
+            {/* Appointment status breakdown */}
+            <div className="grid gap-4 sm:grid-cols-3">
+                <StatusCard label="Scheduled" value={scheduled} icon={Clock} color="text-primary" bg="bg-primary/10" total={appCount ?? 1} />
+                <StatusCard label="Completed" value={completed} icon={CheckCircle2} color="text-emerald-400" bg="bg-emerald-500/10" total={appCount ?? 1} />
+                <StatusCard label="Cancelled" value={cancelled} icon={XCircle} color="text-red-400" bg="bg-red-500/10" total={appCount ?? 1} />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-5">
+                {/* Recent Activity */}
+                <Card className="lg:col-span-3 glass-card border-none">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-lg font-bold flex items-center gap-3 text-white">
+                            <div className="p-2 bg-primary/20 rounded-lg"><Activity className="h-4 w-4 text-primary" /></div>
+                            Recent Appointments
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[350px] flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
-                            <p className="text-blue-100/30 font-bold uppercase tracking-widest text-sm">Interactive Growth Chart Placeholder</p>
+                        <div className="space-y-3">
+                            {recentAppointments?.map((app) => (
+                                <div key={app.id} className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors group">
+                                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-white/10 to-primary/20 flex items-center justify-center text-white font-black text-sm shadow-lg flex-shrink-0">
+                                        {(app.patients as any)?.full_name?.charAt(0) ?? '?'}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-white truncate">{(app.patients as any)?.full_name}</p>
+                                        <p className="text-xs text-blue-100/40 font-medium">
+                                            {new Date(app.appointment_date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                                        </p>
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg
+                                        ${app.status === 'scheduled' ? 'bg-primary/20 text-primary'
+                                            : app.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400'
+                                                : 'bg-red-500/20 text-red-400'}`}>
+                                        {app.status}
+                                    </span>
+                                </div>
+                            ))}
+                            {!recentAppointments?.length && (
+                                <p className="text-center py-12 text-blue-100/20 font-bold uppercase tracking-widest text-sm">No appointments yet</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="lg:col-span-3 glass-card border-none">
-                    <CardHeader>
-                        <CardTitle className="text-xl font-bold text-white">Recent Clinical Activity</CardTitle>
+                {/* Medical Staff */}
+                <Card className="lg:col-span-2 glass-card border-none">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-lg font-bold flex items-center gap-3 text-white">
+                            <div className="p-2 bg-amber-500/20 rounded-lg"><Stethoscope className="h-4 w-4 text-amber-400" /></div>
+                            Medical Staff
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-6">
-                            {recentAppointments?.map((app) => (
-                                <div key={app.id} className="flex items-center gap-5 p-4 hover:bg-white/5 rounded-2xl transition-colors group">
-                                    <div className="h-12 w-12 rounded-full bg-gradient-to-tr from-white/10 to-primary/20 flex items-center justify-center text-white font-black shadow-lg shadow-black/20 group-hover:scale-110 transition-transform">
-                                        {(app.patients as any)?.full_name.charAt(0)}
+                        <div className="space-y-3">
+                            {topDoctors?.map((doc: any) => (
+                                <div key={doc.id} className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-2xl transition-colors">
+                                    <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary/20 to-white/10 flex items-center justify-center flex-shrink-0">
+                                        <Stethoscope className="h-4 w-4 text-primary" />
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-bold text-white leading-none mb-1">{(app.patients as any)?.full_name}</p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-blue-100/50 font-medium">
-                                                {new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                            <span className="text-[10px] uppercase font-black tracking-widest text-primary">
-                                                {app.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="text-[10px] font-black tracking-tighter text-blue-100/20">
-                                        {new Date(app.created_at).toLocaleDateString()}
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-white truncate">{doc.profiles?.full_name}</p>
+                                        <p className="text-[10px] text-blue-100/40 font-medium uppercase tracking-wider">{doc.specialization}</p>
                                     </div>
                                 </div>
                             ))}
+                            {!topDoctors?.length && (
+                                <p className="text-center py-12 text-blue-100/20 font-bold uppercase tracking-widest text-sm">No doctors registered</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -118,21 +123,36 @@ export default async function AnalyticsPage() {
     )
 }
 
-function StatsCard({ title, value, description, icon: Icon, color }: any) {
+function StatsCard({ title, value, sub, icon: Icon, color, bg }: any) {
     return (
-        <Card className="glass-card border-none relative overflow-hidden group jelly">
-            <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+        <Card className="glass-card border-none relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0">
                 <CardTitle className="text-xs font-black text-blue-100/40 uppercase tracking-widest">{title}</CardTitle>
-                <div className="p-2 bg-white/5 rounded-xl group-hover:bg-primary/20 transition-colors">
-                    <Icon className={`h-5 w-5 ${color}`} />
-                </div>
+                <div className={`p-2 ${bg} rounded-xl`}><Icon className={`h-5 w-5 ${color}`} /></div>
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-black text-white tracking-tight mb-2">{value}</div>
-                <p className="text-xs text-blue-100/30 font-bold">{description}</p>
+                <div className="text-3xl font-black text-white tracking-tight mb-1">{value}</div>
+                <p className="text-xs text-blue-100/30 font-bold uppercase tracking-tight">{sub}</p>
             </CardContent>
-            {/* Decorative bubble effect */}
-            <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-white/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+        </Card>
+    )
+}
+
+function StatusCard({ label, value, icon: Icon, color, bg, total }: any) {
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0
+    return (
+        <Card className="glass-card border-none relative overflow-hidden">
+            <CardContent className="pt-6 pb-5">
+                <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2 ${bg} rounded-xl`}><Icon className={`h-5 w-5 ${color}`} /></div>
+                    <span className="text-3xl font-black text-white">{value}</span>
+                </div>
+                <p className="text-xs font-black text-blue-100/40 uppercase tracking-widest">{label}</p>
+                <div className="mt-3 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${color.replace('text-', 'bg-')}`} style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-[10px] text-blue-100/20 font-bold mt-1">{pct}% of total</p>
+            </CardContent>
         </Card>
     )
 }

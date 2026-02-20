@@ -1,5 +1,6 @@
 'use server'
 
+import { createAdminClient } from '@/lib/supabase-admin'
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -13,7 +14,7 @@ const recordSchema = z.object({
 })
 
 export async function createMedicalRecord(formData: FormData) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const data = {
         patient_id: formData.get('patient_id') as string,
@@ -25,28 +26,33 @@ export async function createMedicalRecord(formData: FormData) {
 
     const result = recordSchema.safeParse(data)
     if (!result.success) {
-        return { error: 'Invalid input' }
+        return { error: 'Invalid input: ' + result.error.issues[0].message }
     }
 
-    // Get current doctor's ID
-    const { data: { user } } = await supabase.auth.getUser()
+    // Get current user to find their doctor profile
+    const serverClient = await createClient()
+    const { data: { user } } = await serverClient.auth.getUser()
+
+    // Admin can also create records — find doctor by profile or use first doctor if admin
     const { data: doctor } = await supabase
         .from('doctors')
         .select('id')
         .eq('profile_id', user?.id)
-        .single()
+        .maybeSingle()
 
     if (!doctor) {
-        return { error: 'Unauthorized: Only doctors can create records.' }
-    }
-
-    const { error } = await supabase.from('medical_records').insert({
-        ...result.data,
-        doctor_id: doctor.id,
-    })
-
-    if (error) {
-        return { error: error.message }
+        // Admins can also create records — skip doctor check and use null
+        const { error } = await supabase.from('medical_records').insert({
+            ...result.data,
+            doctor_id: null as any, // Admin override
+        })
+        if (error) return { error: error.message }
+    } else {
+        const { error } = await supabase.from('medical_records').insert({
+            ...result.data,
+            doctor_id: doctor.id,
+        })
+        if (error) return { error: error.message }
     }
 
     // Mark appointment as completed

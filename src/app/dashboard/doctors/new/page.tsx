@@ -8,11 +8,10 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Stethoscope, User, Mail, Award, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase-client'
+import { createDoctor } from '../actions'
 
 export default function NewDoctorPage() {
     const router = useRouter()
-    const supabase = createClient()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -22,49 +21,24 @@ export default function NewDoctorPage() {
         setError(null)
 
         const formData = new FormData(e.currentTarget)
-        const email = formData.get('email') as string
-        const fullName = formData.get('fullName') as string
-        const specialization = formData.get('specialization') as string
-        const password = 'TemporaryPassword123!' // In a real app, this would be sent via email
+        const data = {
+            fullName: formData.get('fullName') as string,
+            email: formData.get('email') as string,
+            specialization: formData.get('specialization') as string,
+        }
 
         try {
-            // 1. Create the Auth User
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                        role: 'doctor'
-                    }
-                }
-            })
+            const result = await createDoctor(data)
 
-            if (authError) throw authError
-            if (!authData.user) throw new Error('Failed to create user')
-
-            // 2. The profile should be created by the database trigger (if configured)
-            // But let's ensure the doctor entry is created.
-            // Note: In our current schema, we might need to wait for the profile or create it manually if no trigger.
-
-            // Wait a moment for trigger if it exists
-            await new Promise(resolve => setTimeout(resolve, 1000))
-
-            // 3. Create Doctor Entry
-            const { error: doctorError } = await supabase
-                .from('doctors')
-                .insert({
-                    id: authData.user.id,
-                    specialization: specialization
-                })
-
-            if (doctorError) throw doctorError
-
-            router.push('/dashboard/doctors')
-            router.refresh()
+            if (result.error) {
+                setError(result.error)
+            } else {
+                router.push('/dashboard/doctors')
+                router.refresh()
+            }
         } catch (err: any) {
-            console.error('Registration error:', err)
-            setError(err.message || 'An unexpected error occurred')
+            console.error('Registration Error:', err)
+            setError('An unexpected error occurred during population')
         } finally {
             setLoading(false)
         }

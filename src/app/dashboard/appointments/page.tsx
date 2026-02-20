@@ -1,13 +1,10 @@
-import { createClient } from '@/lib/supabase-server'
-import { createAppointment } from './actions'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AppointmentForm } from './appointment-form'
 
 export default async function AppointmentsPage() {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Fetch patients and doctors for selection
     const { data: patients } = await supabase.from('patients').select('id, full_name')
@@ -33,67 +30,8 @@ export default async function AppointmentsPage() {
             </header>
 
             <div className="grid gap-10 lg:grid-cols-5">
-                {/* Booking Form */}
-                <Card className="lg:col-span-2 glass-card border-none self-start relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
-                    <CardHeader className="pt-10 px-8">
-                        <CardTitle className="text-2xl font-bold text-white uppercase tracking-tight">Schedule Node</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-8 pb-10">
-                        <form
-                            action={async (formData: FormData) => {
-                                'use server'
-                                await createAppointment(formData)
-                            }}
-                            className="space-y-6"
-                        >
-                            <div className="space-y-2.5">
-                                <Label htmlFor="patient_id" className="text-xs font-black uppercase tracking-widest text-blue-100/40 ml-1">Select Patient</Label>
-                                <select
-                                    id="patient_id"
-                                    name="patient_id"
-                                    required
-                                    className="flex h-14 w-full rounded-2xl border-none glass-input bg-transparent px-4 py-2 text-sm text-white focus:ring-1 focus:ring-primary/50 outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="" className="bg-[#0a0f1e]">Choose Patient Protocol</option>
-                                    {patientsData.map(p => <option key={p.id} value={p.id} className="bg-[#0a0f1e]">{p.full_name}</option>)}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2.5">
-                                <Label htmlFor="doctor_id" className="text-xs font-black uppercase tracking-widest text-blue-100/40 ml-1">Assign Specialist</Label>
-                                <select
-                                    id="doctor_id"
-                                    name="doctor_id"
-                                    required
-                                    className="flex h-14 w-full rounded-2xl border-none glass-input bg-transparent px-4 py-2 text-sm text-white focus:ring-1 focus:ring-primary/50 outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="" className="bg-[#0a0f1e]">Assign MD</option>
-                                    {doctorsData.map(d => (
-                                        <option key={d.id} value={d.id} className="bg-[#0a0f1e]">
-                                            {d.profiles?.full_name} ({d.specialization})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2.5">
-                                <Label htmlFor="appointment_date" className="text-xs font-black uppercase tracking-widest text-blue-100/40 ml-1">Chronology Set</Label>
-                                <Input
-                                    id="appointment_date"
-                                    name="appointment_date"
-                                    type="datetime-local"
-                                    required
-                                    className="h-14 glass-input border-none text-white focus-visible:ring-1 focus-visible:ring-primary/50 rounded-2xl px-4"
-                                />
-                            </div>
-
-                            <button type="submit" className="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 mt-4">
-                                Book Appointment
-                            </button>
-                        </form>
-                    </CardContent>
-                </Card>
+                {/* Booking Form (Client Component) */}
+                <AppointmentForm patients={patientsData} doctors={doctorsData} />
 
                 {/* Appointments List */}
                 <Card className="lg:col-span-3 glass-card border-none">

@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,7 +13,7 @@ const inventorySchema = z.object({
 })
 
 export async function upsertInventory(data: z.infer<typeof inventorySchema> & { id?: string }) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { error } = await supabase
         .from('inventory')
@@ -28,7 +28,7 @@ export async function upsertInventory(data: z.infer<typeof inventorySchema> & { 
 }
 
 export async function updateStock(id: string, quantity: number) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from('inventory')
         .update({ quantity })

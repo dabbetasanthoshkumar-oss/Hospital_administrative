@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -13,7 +13,7 @@ const patientSchema = z.object({
 })
 
 export async function createPatient(formData: FormData) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const data = {
         full_name: formData.get('full_name') as string,
@@ -45,7 +45,7 @@ export async function createPatient(formData: FormData) {
 }
 
 export async function deletePatient(id: string) {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { error } = await supabase.from('patients').delete().eq('id', id)
 
     if (error) {
