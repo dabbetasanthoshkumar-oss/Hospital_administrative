@@ -46,11 +46,11 @@ export async function login(prevState: any, formData: FormData) {
         return { error: 'Login successful, but your account profile was not found. Please run the setup-admin tool again.' }
     }
 
-    if (profile) {
-        redirect('/dashboard')
+    if (!profile) {
+        return { error: 'Login successful, but your account profile was not found. Please ensure an admin profile exists.' }
     }
 
-    return { error: 'Unknown account error. Please contact support.' }
+    redirect('/dashboard')
 }
 
 export async function logout() {

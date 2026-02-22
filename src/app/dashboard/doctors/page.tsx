@@ -74,9 +74,9 @@ export default async function DoctorsPage() {
                                 <button className="flex-1 glass-button h-11 rounded-xl text-[10px] font-black uppercase tracking-widest text-white">
                                     Schedule
                                 </button>
-                                <button className="flex-1 bg-white/5 hover:bg-white/10 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-100/40 transition-colors">
+                                <Link href={`/dashboard/doctors/${doctor.id}`} className="flex-1 bg-white/5 hover:bg-white/10 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-100/40 transition-colors flex items-center justify-center">
                                     Profile
-                                </button>
+                                </Link>
                             </div>
                         </CardContent>
                     </Card>

@@ -72,15 +72,15 @@ export function RecordForm({ patients, appointments }: { patients: any[], appoin
 
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2.5">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-blue-100/40 ml-1">Patient Subject</Label>
-                                <select name="patient_id" required className="flex h-12 w-full rounded-xl border-none glass-input bg-transparent px-4 py-2 text-sm text-white focus:ring-1 focus:ring-primary/50 outline-none appearance-none cursor-pointer">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1">Patient Subject</Label>
+                                <select name="patient_id" required className="flex h-12 w-full rounded-xl border-none glass-input bg-transparent px-4 py-2 text-sm text-slate-100 placeholder:text-slate-300 focus:ring-1 focus:ring-primary/50 outline-none appearance-none cursor-pointer">
                                     <option value="" className="bg-[#0a0f1e]">Select Patient</option>
                                     {patients.map(p => <option key={p.id} value={p.id} className="bg-[#0a0f1e]">{p.full_name}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2.5">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-blue-100/40 ml-1">Active Appointment</Label>
-                                <select name="appointment_id" required className="flex h-12 w-full rounded-xl border-none glass-input bg-transparent px-4 py-2 text-sm text-white focus:ring-1 focus:ring-primary/50 outline-none appearance-none cursor-pointer">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1">Active Appointment</Label>
+                                <select name="appointment_id" required className="flex h-12 w-full rounded-xl border-none glass-input bg-transparent px-4 py-2 text-sm text-slate-100 placeholder:text-slate-300 focus:ring-1 focus:ring-primary/50 outline-none appearance-none cursor-pointer">
                                     <option value="" className="bg-[#0a0f1e]">Link Appointment</option>
                                     {appointments.filter(a => a.status === 'scheduled').map(a => (
                                         <option key={a.id} value={a.id} className="bg-[#0a0f1e]">
@@ -92,29 +92,29 @@ export function RecordForm({ patients, appointments }: { patients: any[], appoin
                         </div>
 
                         <div className="space-y-2.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-blue-100/40 ml-1 flex items-center gap-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1 flex items-center gap-2">
                                 <Thermometer className="h-3 w-3" /> Preliminary Diagnosis
                             </Label>
-                            <Input name="diagnosis" placeholder="e.g. Acute Viral Infection" required className="h-12 glass-input border-none text-white rounded-xl" />
+                            <Input name="diagnosis" placeholder="e.g. Acute Viral Infection" required className="h-12 glass-input border-none text-slate-100 placeholder:text-slate-300 rounded-xl" />
                         </div>
 
                         <div className="space-y-2.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-blue-100/40 ml-1 flex items-center gap-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1 flex items-center gap-2">
                                 <ClipboardList className="h-3 w-3" /> Pharmaceutical Prescription
                             </Label>
                             <textarea
                                 name="prescription_text"
                                 placeholder="List medications and dosage instructions..."
-                                className="w-full min-h-[100px] p-4 glass-input border-none text-white rounded-xl text-sm focus:ring-1 focus:ring-primary/50 outline-none resize-none"
+                                className="w-full min-h-[100px] p-4 glass-input border-none text-slate-100 placeholder:text-slate-300 rounded-xl text-sm focus:ring-1 focus:ring-primary/50 outline-none resize-none"
                             />
                         </div>
 
                         <div className="space-y-2.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-blue-100/40 ml-1">Clinical Observations</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1">Clinical Observations</Label>
                             <textarea
                                 name="notes"
                                 placeholder="Enter detailed treatment plan and observations..."
-                                className="w-full min-h-[120px] p-4 glass-input border-none text-white rounded-xl text-sm focus:ring-1 focus:ring-primary/50 outline-none resize-none"
+                                className="w-full min-h-[120px] p-4 glass-input border-none text-slate-100 placeholder:text-slate-300 rounded-xl text-sm focus:ring-1 focus:ring-primary/50 outline-none resize-none"
                             />
                         </div>
 
