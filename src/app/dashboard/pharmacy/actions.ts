@@ -41,3 +41,24 @@ export async function updateStock(id: string, quantity: number) {
     revalidatePath('/dashboard/pharmacy')
     return { success: true }
 }
+
+export async function dispensePrescriptionAction(prescriptionId: string) {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from('prescriptions')
+        .update({ 
+            status: 'dispensed',
+            dispensed_at: new Date().toISOString()
+        })
+        .eq('id', prescriptionId)
+
+    if (error) {
+        console.error('Dispense error:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/dashboard/pharmacy')
+    revalidatePath('/dashboard')
+    return { success: true }
+}

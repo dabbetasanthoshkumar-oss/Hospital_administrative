@@ -1,59 +1,45 @@
-import { createAdminClient } from '@/lib/supabase-admin'
-import { redirect } from 'next/navigation'
-import { LogoutButton } from '@/components/logout-button'
-import { TrendingUp } from 'lucide-react'
+'use client'
 
-export default async function DashboardPage() {
-    const supabase = createAdminClient()
-    const { data: { user } } = await supabase.auth.getUser()
+import { useAuth } from '@/components/auth-context'
+import { AdminDashboard } from '@/components/dashboards/admin-dashboard'
+import { DoctorDashboard } from '@/components/dashboards/doctor-dashboard'
+import { PatientDashboard } from '@/components/dashboards/patient-dashboard'
+import { ReceptionistDashboard } from '@/components/dashboards/receptionist-dashboard'
+import { PharmacistDashboard } from '@/components/dashboards/pharmacist-dashboard'
+import { Loader2 } from 'lucide-react'
 
-    if (!user) {
-        redirect('/login')
+export default function DashboardPage() {
+    const { profile, isLoading } = useAuth()
+
+    if (isLoading) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
+            </div>
+        )
     }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+    if (!profile) return null
 
-    return (
-        <div className="space-y-10">
-            <header className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tight text-white mb-2">Dashboard</h1>
-                    <p className="text-blue-100/60 font-medium">Monitoring system health and patient care</p>
+    switch (profile.role) {
+        case 'admin':
+            return <AdminDashboard />
+        case 'doctor':
+            return <DoctorDashboard />
+        case 'patient':
+            return <PatientDashboard />
+        case 'receptionist':
+            return <ReceptionistDashboard />
+        case 'pharmacist':
+            return <PharmacistDashboard />
+        default:
+            return (
+                <div className="glass-card p-12 text-center">
+                    <h2 className="text-2xl font-black text-rose-400 mb-2 uppercase italic tracking-tighter">Access Context Missing</h2>
+                    <p className="text-blue-100/40 font-medium">Please contact system administrator to assign your clinical role.</p>
                 </div>
-                <div className="flex items-center gap-6 p-2 pr-6 glass-card border-none rounded-full h-16">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary to-cyan-400 flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">
-                        {profile?.full_name?.charAt(0)}
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-white font-bold text-sm leading-tight">
-                            {profile?.full_name}
-                        </span>
-                        <span className="text-primary text-xs font-bold uppercase tracking-widest">
-                            {profile?.role}
-                        </span>
-                    </div>
-                    <LogoutButton />
-                </div>
-            </header>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                <div className="glass-card p-8 border-none relative overflow-hidden group jelly">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-500">
-                        <TrendingUp className="w-12 h-12" />
-                    </div>
-                    <h3 className="text-primary font-bold text-sm uppercase tracking-wider mb-4">Total Overview</h3>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-black text-white">128</span>
-                        <span className="text-emerald-400 text-sm font-bold">+12%</span>
-                    </div>
-                    <p className="text-blue-100/40 text-sm mt-2 font-medium">System activity since last week</p>
-                </div>
-            </div>
-        </div>
-    )
+            )
+    }
 }
+
 

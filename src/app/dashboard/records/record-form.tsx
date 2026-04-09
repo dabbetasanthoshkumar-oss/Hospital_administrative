@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createMedicalRecord } from './actions'
-import { FileText, Loader2, AlertCircle, Plus, X, Thermometer, ClipboardList } from 'lucide-react'
+import { FileText, Loader2, AlertCircle, Plus, X, Thermometer, ClipboardList, Brain, Sparkles } from 'lucide-react'
+import { getAIDiagnosisSuggestions } from '../ai-actions'
 
 export function RecordForm({ patients, appointments }: { patients: any[], appointments: any[] }) {
     const router = useRouter()
@@ -34,6 +35,53 @@ export function RecordForm({ patients, appointments }: { patients: any[], appoin
         } finally {
             setLoading(false)
         }
+    }
+
+    function AIPreviewButton() {
+        const [isAnalyzing, setIsAnalyzing] = useState(false)
+        
+        async function handleAI() {
+            const symptoms = (document.getElementById('diagnosis_input') as HTMLInputElement)?.value
+            if (!symptoms || symptoms.length < 3) {
+                alert('Please enter some preliminary symptoms or diagnosis first.')
+                return
+            }
+            
+            setIsAnalyzing(true)
+            try {
+                const result = await getAIDiagnosisSuggestions([symptoms])
+                if (result.success && result.data) {
+                    const { suggestedDiagnosis, confidence, recommendations } = result.data
+                    const confirmMsg = `AI Suggestion: ${suggestedDiagnosis} (${confidence}% confidence)\n\nRecommendations:\n${recommendations.join('\n')}\n\nWould you like to use this diagnosis?`
+                    
+                    if (window.confirm(confirmMsg)) {
+                        const input = document.getElementById('diagnosis_input') as HTMLInputElement
+                        if (input) input.value = suggestedDiagnosis
+                        
+                        const notes = document.getElementsByName('notes')[0] as HTMLTextAreaElement
+                        if (notes) notes.value = (notes.value ? notes.value + '\n\n' : '') + `AI Recommendations: ${recommendations.join(', ')}`
+                    }
+                } else if (result.error) {
+                    alert(result.error)
+                }
+            } catch (err: any) {
+                alert('Connection to AI service failed. Ensure the Python backend is running.')
+            } finally {
+                setIsAnalyzing(false)
+            }
+        }
+
+        return (
+            <button
+                type="button"
+                onClick={handleAI}
+                disabled={isAnalyzing}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+            >
+                {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {isAnalyzing ? 'Analyzing...' : 'AI Assist'}
+            </button>
+        )
     }
 
     if (!isOpen) {
@@ -91,11 +139,20 @@ export function RecordForm({ patients, appointments }: { patients: any[], appoin
                             </div>
                         </div>
 
-                        <div className="space-y-2.5">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1 flex items-center gap-2">
-                                <Thermometer className="h-3 w-3" /> Preliminary Diagnosis
-                            </Label>
-                            <Input name="diagnosis" placeholder="e.g. Acute Viral Infection" required className="h-12 glass-input border-none text-slate-100 placeholder:text-slate-300 rounded-xl" />
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-200 ml-1 flex items-center gap-2">
+                                    <Thermometer className="h-4 w-4 text-red-400" /> Preliminary Diagnosis
+                                </Label>
+                                <AIPreviewButton />
+                            </div>
+                            <Input 
+                                id="diagnosis_input"
+                                name="diagnosis" 
+                                placeholder="e.g. Acute Viral Infection" 
+                                required 
+                                className="h-12 glass-input border-none text-slate-100 placeholder:text-slate-300 rounded-xl" 
+                            />
                         </div>
 
                         <div className="space-y-2.5">

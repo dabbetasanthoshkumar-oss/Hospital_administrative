@@ -1,4 +1,7 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+ 'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import {
     Table, TableBody, TableCell,
     TableHead, TableHeader, TableRow
@@ -6,17 +9,28 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ShieldAlert, UserCheck, Clock, PlusCircle, RefreshCw, Trash2 } from 'lucide-react'
 
-export default async function AuditPage() {
-    const supabase = createAdminClient()
+export default function AuditPage() {
+    const [logs, setLogs] = useState<any[]>([])
 
-    const { data: logs } = await supabase
-        .from('audit_logs')
-        .select(`
-      *,
-      profiles:user_id(full_name, role)
-    `)
-        .order('timestamp', { ascending: false })
-        .limit(100)
+    useEffect(() => {
+        const loadLogs = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                const res = await supabase
+                    .from('audit_logs')
+                    .select('*,profiles:user_id(full_name, role)')
+                    .order('timestamp', { ascending: false })
+                    .limit(100)
+                setLogs(res.data || [])
+            } catch (err) {
+                console.error('Failed to load audit logs:', err)
+            }
+        }
+        loadLogs()
+    }, [])
 
     const insertCount = logs?.filter(l => l.action === 'INSERT').length ?? 0
     const updateCount = logs?.filter(l => l.action === 'UPDATE').length ?? 0

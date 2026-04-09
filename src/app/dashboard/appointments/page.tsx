@@ -1,23 +1,39 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppointmentForm } from './appointment-form'
 
-export default async function AppointmentsPage() {
-    const supabase = createAdminClient()
-
-    // Fetch patients and doctors for selection
-    const { data: patients } = await supabase.from('patients').select('id, full_name')
-    const { data: doctors } = await supabase.from('doctors').select('id, specialization, profiles(full_name)')
-
-    const { data: appointments } = await supabase
-        .from('appointments')
-        .select(`
-      *,
-      patients(full_name, patient_id),
-      doctors(specialization, profiles(full_name))
-    `)
-        .order('appointment_date', { ascending: true })
+export default function AppointmentsPage() {
+    const [patients, setPatients] = useState<any[]>([])
+    const [doctors, setDoctors] = useState<any[]>([])
+    const [appointments, setAppointments] = useState<any[]>([])
+    
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                
+                const [patientsRes, doctorsRes, appointmentsRes] = await Promise.all([
+                    supabase.from('patients').select('id, full_name'),
+                    supabase.from('doctors').select('id, specialization, profiles(full_name)'),
+                    supabase.from('appointments').select('*,patients(full_name, patient_id),doctors(specialization, profiles(full_name))').order('appointment_date', { ascending: true })
+                ])
+                
+                setPatients(patientsRes.data || [])
+                setDoctors(doctorsRes.data || [])
+                setAppointments(appointmentsRes.data || [])
+            } catch (error) {
+                console.error('Failed to load appointments data:', error)
+            }
+        }
+        loadData()
+    }, [])
 
     const patientsData = (patients || []) as { id: string; full_name: string }[]
     const doctorsData = (doctors || []) as any[]

@@ -1,4 +1,7 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Button } from "@/components/ui/button"
 import {
     Table,
@@ -13,12 +16,27 @@ import { PlusCircle, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 
-export default async function PatientsPage() {
-    const supabase = createAdminClient()
-    const { data: patients } = await supabase
-        .from('patients')
-        .select('*')
-        .order('created_at', { ascending: false })
+export default function PatientsPage() {
+    const [patients, setPatients] = useState<any[]>([])
+    
+    useEffect(() => {
+        const loadPatients = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                const { data } = await supabase
+                    .from('patients')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                setPatients(data || [])
+            } catch (error) {
+                console.error('Failed to load patients:', error)
+            }
+        }
+        loadPatients()
+    }, [])
 
     return (
         <div className="space-y-10">

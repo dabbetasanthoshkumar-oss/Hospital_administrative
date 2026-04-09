@@ -1,26 +1,39 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, ClipboardList, Thermometer } from 'lucide-react'
 import { RecordForm } from './record-form'
 
-export default async function RecordsPage() {
-    const supabase = createAdminClient()
-
-    // Fetch related data for the form
-    const { data: patients } = await supabase.from('patients').select('id, full_name')
-    const { data: appointments } = await supabase
-        .from('appointments')
-        .select('id, appointment_date, status, patients(full_name)')
-        .order('appointment_date', { ascending: false })
-
-    const { data: records } = await supabase
-        .from('medical_records')
-        .select(`
-      *,
-      patients(full_name, patient_id),
-      doctors(profiles(full_name))
-    `)
-        .order('created_at', { ascending: false })
+export default function RecordsPage() {
+    const [patients, setPatients] = useState<any[]>([])
+    const [appointments, setAppointments] = useState<any[]>([])
+    const [records, setRecords] = useState<any[]>([])
+    
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                
+                const [patientsRes, appointmentsRes, recordsRes] = await Promise.all([
+                    supabase.from('patients').select('id, full_name'),
+                    supabase.from('appointments').select('id, appointment_date, status, patients(full_name)').order('appointment_date', { ascending: false }),
+                    supabase.from('medical_records').select('*,patients(full_name, patient_id),doctors(profiles(full_name))').order('created_at', { ascending: false })
+                ])
+                
+                setPatients(patientsRes.data || [])
+                setAppointments(appointmentsRes.data || [])
+                setRecords(recordsRes.data || [])
+            } catch (error) {
+                console.error('Failed to load records:', error)
+            }
+        }
+        loadData()
+    }, [])
 
     return (
         <div className="space-y-10">

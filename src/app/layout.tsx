@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Secure and interactive hospital administration system.",
 };
 
+import { AuthProvider } from "@/components/auth-context";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

@@ -70,9 +70,12 @@
 
 ### What Type of Project Is This?
 
-**Type:** Full-Stack Next.js Web Application (Next.js 15.1.9)
+**Type:** Full-Stack Next.js Web Application with Python AI Microservice
 
-**NOT a Python project** — Despite the filename containing "admin," this is a **pure TypeScript/JavaScript** application. All server-side logic runs on Node.js via Next.js Server Components and Server Actions.
+**Architecture:** Hybrid Next.js 15 + Flask API
+- **Frontend/BFF:** Next.js 15.1.9 (TypeScript)
+- **AI Microservice:** Python 3.11+ (Flask)
+- **Database:** Supabase (PostgreSQL)
 
 ### Architecture Pattern: **N-Tier Architecture**
 
@@ -1091,15 +1094,54 @@ npm run start
 
 ---
 
-## 🐍 PYTHON INTEGRATION
+## 🐍 AI & MACHINE LEARNING (PYTHON)
 
-### **Important: NO Python in This Project**
+### **Hopi Sync AI Service**
 
-This is a **pure TypeScript/JavaScript** application. However, if you need Python for specific use cases:
+The project includes an integrated Python microservice (located in `/python`) that provides advanced medical intelligence features. This service is a Flask-based API that communicates with the Next.js frontend to provide real-time diagnostic support and patient data analysis.
 
-### Potential Python Use Cases
+### AI Features
 
-#### 1. **Data Analysis & ML (External Service)**
+#### 1. **AI Diagnosis Suggestions**
+- **Endpoint:** `/api/predict-disease` (POST)
+- **Logic:** Uses ML models to suggest potential diagnoses based on patient symptoms.
+- **Integration:** Triggered from the Medical Records form to assist doctors in clinical documentation.
+- **Benefits:** Reduces documentation time and provides a "second opinion" for standard cases.
+
+#### 2. **Patient Risk Scoring**
+- **Endpoint:** `/api/patient-risk/<patient_id>` (GET)
+- **Logic:** Analyzes visit history, diagnosis frequency, and demographic factors to calculate a health risk score (0.0 - 1.0).
+- **Integration:** Displayed on the patient overview page and analytics dashboard.
+- **Benefits:** Identifies high-risk patients for proactive care management.
+
+#### 3. **Clinical Data Processing**
+- **Endpoint:** `/api/patient-analysis/<patient_id>` (GET)
+- **Logic:** Performs complex aggregations and health trend analysis that are computationally expensive for standard SQL.
+- **Benefits:** Provides deep insights into patient health trajectories.
+
+### Tech Stack (Python)
+- **Flask 3.0** — Lightweight API framework
+- **Pandas/NumPy** — Data manipulation and analysis
+- **Scikit-learn** — Machine Learning models
+- **Supabase-py** — direct database access for batch processing
+
+### Integration Architecture
+```mermaid
+graph LR
+    subgraph Next.js_App
+        A[Browser UI] --> B[Server Actions]
+        B --> C[Python Client]
+    end
+    subgraph Python_Service
+        C --> D[Flask API]
+        D --> E[ML Models]
+        D --> F[Data Processors]
+    end
+    subgraph Data_Layer
+        B --> G[(Supabase DB)]
+        D --> G
+    end
+```
 ```python
 # NOT integrated into the app
 # Separate Python service for analytics

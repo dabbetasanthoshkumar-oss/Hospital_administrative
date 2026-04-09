@@ -1,18 +1,32 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Stethoscope, Award, Mail, Calendar, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 
-export default async function DoctorsPage() {
-    const supabase = createAdminClient()
-
-    const { data: doctors } = await supabase
-        .from('doctors')
-        .select(`
-      *,
-      profiles(full_name, role)
-    `)
+export default function DoctorsPage() {
+    const [doctors, setDoctors] = useState<any[]>([])
+    
+    useEffect(() => {
+        const loadDoctors = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                const { data } = await supabase
+                    .from('doctors')
+                    .select('*,profiles(full_name, role)')
+                setDoctors(data || [])
+            } catch (error) {
+                console.error('Failed to load doctors:', error)
+            }
+        }
+        loadDoctors()
+    }, [])
 
     return (
         <div className="space-y-10">

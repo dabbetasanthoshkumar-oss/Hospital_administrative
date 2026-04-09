@@ -1,22 +1,53 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+ 'use client'
+'use client'
+
+import React, { use, useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
-export default async function DoctorDetail({ params }: { params: { id: string } }) {
-  const supabase = createAdminClient()
+export default function DoctorDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const [doctor, setDoctor] = useState<any | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const { data: doctor, error } = await supabase
-    .from('doctors')
-    .select(`*, profiles(full_name, role)`)
-    .eq('id', params.id)
-    .maybeSingle()
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+        )
+        const res = await supabase
+          .from('doctors')
+          .select('*, profiles(full_name, role)')
+          .eq('id', id)
+          .maybeSingle()
+        if (res.error) {
+          setError(res.error.message)
+        } else {
+          setDoctor(res.data || null)
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [id])
+
+  if (loading) {
+    return <div className="py-20 text-center">Loading...</div>
+  }
 
   if (error) {
     return (
       <div className="py-20 text-center">
-        <p className="text-red-400">Failed to load doctor: {error.message}</p>
+        <p className="text-red-400">Failed to load doctor: {error}</p>
         <Link href="/dashboard/doctors" className="mt-4 inline-block text-primary underline">Back to roster</Link>
       </div>
     )
@@ -31,7 +62,7 @@ export default async function DoctorDetail({ params }: { params: { id: string } 
     )
   }
 
-  const profile = (doctor as any).profiles || {}
+  const profile = doctor.profiles || {}
 
   return (
     <div className="space-y-6">
@@ -72,7 +103,7 @@ export default async function DoctorDetail({ params }: { params: { id: string } 
       </Card>
 
       <div className="flex gap-3">
-        <Link href={`/dashboard/doctors/${params.id}/edit`} className="px-4 py-2 bg-primary text-white rounded-xl">Edit</Link>
+        <Link href={`/dashboard/doctors/${id}/edit`} className="px-4 py-2 bg-primary text-white rounded-xl">Edit</Link>
         <Link href="/dashboard/doctors" className="px-4 py-2 bg-white/5 rounded-xl">Close</Link>
       </div>
     </div>

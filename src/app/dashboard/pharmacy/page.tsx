@@ -1,4 +1,7 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Table,
@@ -12,13 +15,27 @@ import { Badge } from '@/components/ui/badge'
 import { Pill, AlertTriangle, PackageSearch } from 'lucide-react'
 import { InventoryForm } from './inventory-form'
 
-export default async function PharmacyPage() {
-    const supabase = createAdminClient()
-
-    const { data: inventory } = await supabase
-        .from('inventory')
-        .select('*')
-        .order('medicine_name', { ascending: true })
+export default function PharmacyPage() {
+    const [inventory, setInventory] = useState<any[]>([])
+    
+    useEffect(() => {
+        const loadInventory = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                const { data } = await supabase
+                    .from('inventory')
+                    .select('*')
+                    .order('medicine_name', { ascending: true })
+                setInventory(data || [])
+            } catch (error) {
+                console.error('Failed to load inventory:', error)
+            }
+        }
+        loadInventory()
+    }, [])
 
     const lowStockItems = inventory?.filter(i => i.quantity <= i.low_stock_threshold)
     const expiringSoon = inventory?.filter(i => {

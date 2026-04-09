@@ -1,42 +1,75 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Table, TableBody, TableCell,
     TableHead, TableHeader, TableRow
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Receipt, CreditCard, DollarSign, TrendingUp } from 'lucide-react'
+import { Receipt, CreditCard, DollarSign, TrendingUp, HandCoins } from 'lucide-react'
 import { BillingActions } from './billing-actions'
+import { PaymentModal } from '@/components/billing/payment-modal'
+import { useAuth } from '@/components/auth-context'
 
-export default async function BillingPage() {
-    const supabase = createAdminClient()
-
-    const { data: bills } = await supabase
-        .from('billing')
-        .select(`
-      *,
-      appointment:appointments(
-        appointment_date,
-        patient:patients(full_name, patient_id),
-        doctor:doctors(profiles(full_name))
-      )
-    `)
-        .order('created_at', { ascending: false })
-
-    // Fetch appointments that have no billing record yet
-    const { data: unbilledAppts } = await supabase
-        .from('appointments')
-        .select('id, appointment_date, patients(full_name, patient_id)')
-        .eq('status', 'completed')
-        .not('id', 'in', `(${bills?.map(b => `"${b.appointment_id}"`).join(',') || '"00000000-0000-0000-0000-000000000000"'})`)
-        .order('appointment_date', { ascending: false })
-        .limit(20)
+export default function BillingPage() {
+    const { profile } = useAuth()
+    const [bills, setBills] = useState<any[]>([])
+    const [unbilledAppts, setUnbilledAppts] = useState<any[]>([])
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+    const [selectedBill, setSelectedBill] = useState<any>(null)
+    
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                )
+                
+                const billsRes = await supabase
+                    .from('billing')
+                    .select('*,appointment:appointments(appointment_date,patient:patients(full_name, patient_id),doctor:doctors(profiles(full_name)))')
+                    .order('created_at', { ascending: false })
+                
+                setBills(billsRes.data || [])
+                
+                const billedIds = (billsRes.data || []).map(b => b.appointment_id)
+                const unRes = await supabase
+                    .from('appointments')
+                    .select('id, appointment_date, patients(full_name, patient_id)')
+                    .eq('status', 'completed')
+                    .not('id', 'in', billedIds.length > 0 ? `(${billedIds.map(id => `"${id}"`).join(',')})` : '("00000000-0000-0000-0000-000000000000")')
+                    .order('appointment_date', { ascending: false })
+                    .limit(20)
+                    
+                setUnbilledAppts(unRes.data || [])
+            } catch (error) {
+                console.error('Failed to load billing data:', error)
+            }
+        }
+        loadData()
+    }, [])
 
     const totalRevenue = bills?.reduce((acc, b) =>
         acc + (b.payment_status === 'paid' ? Number(b.total_amount) : 0), 0) ?? 0
     const totalPending = bills?.reduce((acc, b) =>
         acc + (b.payment_status !== 'paid' ? Number(b.total_amount) : 0), 0) ?? 0
     const paidCount = bills?.filter(b => b.payment_status === 'paid').length ?? 0
+
+    const handleMarkPaid = async (billId: string) => {
+        try {
+            const supabase = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+            )
+            await supabase.from('billing').update({ payment_status: 'paid' }).eq('id', billId)
+            setBills(bills.map(b => b.id === billId ? { ...b, payment_status: 'paid' } : b))
+        } catch (error) {
+            console.error('Failed to mark paid:', error)
+        }
+    }
 
     return (
         <div className="space-y-8">
@@ -142,35 +175,43 @@ export default async function BillingPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right pr-6 py-4">
-                                        {bill.payment_status !== 'paid' && (
-                                            <form action={async () => {
-                                                'use server'
-                                                const { createAdminClient: ac } = await import('@/lib/supabase-admin')
-                                                const { revalidatePath } = await import('next/cache')
-                                                await ac().from('billing').update({ payment_status: 'paid' }).eq('id', bill.id)
-                                                revalidatePath('/dashboard/billing')
-                                            }}>
-                                                <button type="submit" className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase rounded-xl transition-colors">
-                                                    Mark Paid
-                                                </button>
-                                            </form>
+                                        {bill.payment_status !== 'paid' && (profile?.role === 'receptionist' || profile?.role === 'admin') && (
+                                            <button 
+                                                onClick={() => {
+                                                    setSelectedBill(bill)
+                                                    setIsPaymentModalOpen(true)
+                                                }} 
+                                                className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase rounded-xl transition-all flex items-center gap-2 group"
+                                            >
+                                                <HandCoins className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                                                Process Payment
+                                            </button>
+                                        )}
+                                        {bill.payment_status === 'paid' && (
+                                            <Badge variant="outline" className="bg-white/5 text-white/20 border-none rounded-lg text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+                                                Finalized
+                                            </Badge>
                                         )}
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {(!bills || bills.length === 0) && (
-                                <TableRow className="hover:bg-transparent">
-                                    <TableCell colSpan={8} className="text-center py-24">
-                                        <Receipt className="h-12 w-12 mx-auto mb-4 text-white/5" />
-                                        <p className="font-black text-blue-100/20 uppercase tracking-[0.2em] text-sm">No invoices yet</p>
-                                        <p className="text-blue-100/10 text-xs mt-1">Create an invoice from completed appointments above</p>
-                                    </TableCell>
-                                </TableRow>
-                            )}
                         </TableBody>
                     </Table>
                 </div>
             </div>
+
+            {selectedBill && (
+                <PaymentModal 
+                    isOpen={isPaymentModalOpen}
+                    onClose={() => {
+                        setIsPaymentModalOpen(false)
+                        setSelectedBill(null)
+                    }}
+                    billingId={selectedBill.id}
+                    amount={Number(selectedBill.total_amount)}
+                    patientName={(selectedBill.appointment as any)?.patient?.full_name ?? 'Patient'}
+                />
+            )}
         </div>
     )
 }

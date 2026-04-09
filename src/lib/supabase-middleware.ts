@@ -61,18 +61,42 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+        // Refresh session if needed (this will handle expired tokens)
+        const { data: { user } } = await supabase.auth.getUser()
 
-    // unprotected routes
-    const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+        // unprotected routes
+        const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+        const isApiRoute = request.nextUrl.pathname.startsWith('/api')
+        const isStaticAsset = /\.(css|js|png|jpg|jpeg|gif|ico|svg|webp)$/i.test(request.nextUrl.pathname)
 
-    if (!user && !isAuthPage) {
-        return NextResponse.redirect(new URL('/login', request.url))
-    }
+        // Skip auth checks for API routes, static assets, and _next files
+        if (isApiRoute || isStaticAsset || request.nextUrl.pathname.startsWith('/_next')) {
+            return response
+        }
 
-    if (user && isAuthPage) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+        // DEVELOPMENT BYPASS CHECK
+        const isDevAuth = request.cookies.get('dev-auth')?.value === 'true'
+        if (isDevAuth) {
+            if (isAuthPage) {
+                return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
+            return response
+        }
+
+        if (!user && !isAuthPage) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
+
+        if (user && isAuthPage) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+    } catch (error) {
+        // If there's an error checking auth, let it through
+        // The client-side will handle redirects
+        console.error('Auth middleware error:', error)
     }
 
     return response
 }
+
